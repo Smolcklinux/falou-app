@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "falou-app",
+    "name": "Falou",
     "slug": "falou-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,41 +8,69 @@
     "scheme": "falouapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "backgroundColor": "#1a1a2e",
+    "primaryColor": "#6c63ff",
+    "description": "App de salas de voz interativas - Falou",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.falou.app",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "O Falou precisa acessar sua câmera para tirar foto de perfil",
+        "NSPhotoLibraryUsageDescription": "O Falou precisa acessar suas fotos para escolher avatar",
+        "NSMicrophoneUsageDescription": "O Falou precisa acessar seu microfone para você falar nas salas de voz"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#6c63ff"
       },
+      "package": "com.falou.app",
+      "versionCode": 4,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
       [
-        "expo-splash-screen",
+        "expo-image-picker",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "photosPermission": "O Falou precisa acessar suas fotos para escolher seu avatar.",
+          "cameraPermission": "O Falou precisa acessar sua câmera para tirar foto de perfil."
         }
-      ]
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "O Falou precisa acessar seu microfone para você falar nas salas de voz."
+        }
+      ],
+      "react-native-permissions",
+      "@livekit/react-native-expo-plugin"
     ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1327cbfe-9b25-476e-a9dc-538b573fcbf2"
+      }
+    },
+    "owner": "pudim0147",
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "tsconfigPaths": false
     }
   }
 }
