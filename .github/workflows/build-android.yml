@@ -1,0 +1,50 @@
+name: Build APK Falou App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-android:
+    name: Build APK com LiveKit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps
+      
+      - name: Gerar projeto nativo
+        run: npx expo prebuild --platform android --clean
+      
+      - name: Build APK Release
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+      
+      - name: Upload do APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: falou-app-release
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
