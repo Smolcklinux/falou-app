@@ -2,12 +2,12 @@
  * ============================================
  * FALOU - TELA DE SALAS DE VOZ
  * ============================================
- * ✅ VERSÃO COMPLETA:
- * 1. Lista todas as salas ativas
- * 2. ID da sala visível para compartilhamento
- * 3. Usuários podem entrar por ID numérico
- * 4. Navega para LiveKitVoiceRoom (áudio real)
- * 5. Chat persistente no Firestore
+ * ✅ VERSÃO CORRIGIDA:
+ * 1. Removidos caracteres inválidos no final
+ * 2. Lista todas as salas ativas
+ * 3. ID da sala visível para compartilhamento
+ * 4. Usuários podem entrar por ID numérico
+ * 5. Navega para LiveKitVoiceRoom (áudio real)
  * ============================================
  */
 
@@ -15,29 +15,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Alert, TextInput, Modal, ActivityIndicator, 
-  RefreshControl, Image, ScrollView, Animated
+  RefreshControl, Image, Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';
 import { 
   getActiveRooms, createVoiceRoom, getUserProfile, 
-  getRoomSeats, updateRoomSeats,
-  listenToRoomMessages, getRoomMessages,
   getRoomByNumericId
 } from '../services/firestore/index';
 import { colors } from '../utils/colors';
 import { testBackend } from '../services/livekit';
 
-// Configuração das cadeiras (10 no total)
-const SEATS_COUNT = 10;
-const SEATS_NAMES = ['Dono(a)', 'Parceiro', 'Nº1', 'Nº2', 'Nº3', 'Nº4', 'Nº5', 'Nº6', 'Nº7', 'Nº8'];
-
 export default function VoiceRoomScreen({ navigation, route }) {
   const { roomId, roomData: initialRoomData, roomNumericId: joinNumericId } = route.params || {};
   
   const [rooms, setRooms] = useState([]);
-  const [currentRoom, setCurrentRoom] = useState(initialRoomData || null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,38 +40,20 @@ export default function VoiceRoomScreen({ navigation, route }) {
   const [joinModalVisible, setJoinModalVisible] = useState(false);
   const [joinRoomId, setJoinRoomId] = useState('');
   
-  const [seats, setSeats] = useState(Array(SEATS_COUNT).fill(null));
-  const [loadingSeats, setLoadingSeats] = useState(false);
-  
-  const [messages, setMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
-  const flatListRef = useRef();
-  const unsubscribeMessages = useRef(null);
-  
-  // Estado para saber se LiveKit está ativo (mostra ID)
   const [liveKitActive, setLiveKitActive] = useState(false);
   
-  // Animações
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     loadData();
     checkLiveKitStatus();
     animateEntrance();
-    
-    return () => {
-      if (unsubscribeMessages.current) {
-        unsubscribeMessages.current();
-      }
-    };
   }, []);
 
   const animateEntrance = () => {
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
     ]).start();
   };
@@ -101,7 +76,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
   const loadRooms = async () => {
     const result = await getActiveRooms();
     if (result.success) {
-      console.log('📊 Salas carregadas:', result.data.length);
       setRooms(result.data);
     }
   };
@@ -111,7 +85,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
     loadData();
   };
 
-  // ✅ CRIAR SALA COM ID NUMÉRICO
   const handleCreateRoom = async () => {
     if (!roomName.trim()) {
       Alert.alert('Erro', 'Digite um nome para a sala');
@@ -128,7 +101,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
     });
 
     if (result.success) {
-      console.log('✅ Sala criada! ID:', result.id, 'ID Numérico:', result.roomNumericId);
       setModalVisible(false);
       setRoomName('');
       setRoomDescription('');
@@ -140,7 +112,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  // ✅ ENTRAR POR ID NUMÉRICO
   const handleJoinByNumericId = async () => {
     if (!joinRoomId.trim()) {
       Alert.alert('Erro', 'Digite o ID da sala');
@@ -158,7 +129,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
     
     const result = await getRoomByNumericId(numericId);
     if (result.success) {
-      // ✅ Navega diretamente para o componente de áudio
       navigation.navigate('LiveKitVoiceRoom', { 
         roomId: result.data.id,
         roomName: result.data.name,
@@ -170,13 +140,7 @@ export default function VoiceRoomScreen({ navigation, route }) {
     setLoading(false);
   };
 
-  // ✅ ENTRAR NA SALA (clique na lista)
   const enterRoom = (room) => {
-    console.log('🎤 Entrando na sala:', room.name);
-    console.log('📌 ID da sala:', room.id);
-    console.log('📌 ID Numérico:', room.roomNumericId);
-    
-    // ✅ Navegar para o componente LiveKitVoiceRoom (áudio ao vivo)
     navigation.navigate('LiveKitVoiceRoom', { 
       roomId: room.id,
       roomName: room.name,
@@ -184,9 +148,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
     });
   };
 
-  // ==========================================
-  // RENDERIZAÇÃO DA LISTA DE SALAS
-  // ==========================================
   const renderRoom = ({ item }) => {
     const onlineCount = item.seats?.filter(s => s)?.length || 0;
     const displayId = item.roomNumericId || item.id?.slice(-6);
@@ -212,7 +173,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
             </View>
             <View style={styles.roomInfo}>
               <Text style={styles.roomName}>{item.name}</Text>
-              {/* ✅ ID da sala visível (só se LiveKit ativo) */}
               {liveKitActive && (
                 <Text style={styles.roomNumericId}>Sala #{displayId}</Text>
               )}
@@ -246,7 +206,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
 
   return (
     <LinearGradient colors={[colors.background, '#0f0f1a']} style={styles.container}>
-      {/* Header da lista */}
       <LinearGradient colors={[colors.card, 'transparent']} style={styles.headerGradient}>
         <View style={styles.header}>
           <View>
@@ -254,14 +213,12 @@ export default function VoiceRoomScreen({ navigation, route }) {
             <Text style={styles.headerSubtitle}>Conecte-se ao vivo</Text>
           </View>
           <View style={styles.headerButtons}>
-            {/* ✅ Botão Entrar por ID */}
             <TouchableOpacity style={styles.joinButton} onPress={() => setJoinModalVisible(true)}>
               <LinearGradient colors={['#4ecdc4', '#44a08d']} style={styles.joinButtonGradient}>
                 <Icon name="login" size={16} color="#fff" />
                 <Text style={styles.joinButtonText}>Entrar por ID</Text>
               </LinearGradient>
             </TouchableOpacity>
-            {/* ✅ Botão Criar Sala */}
             <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
               <LinearGradient colors={[colors.primary, '#4ecdc4']} style={styles.createButtonGradient}>
                 <Icon name="plus" size={20} color="#fff" />
@@ -272,7 +229,6 @@ export default function VoiceRoomScreen({ navigation, route }) {
         </View>
       </LinearGradient>
 
-      {/* Lista de Salas */}
       <FlatList
         data={rooms}
         keyExtractor={(item) => item.id}
@@ -296,9 +252,7 @@ export default function VoiceRoomScreen({ navigation, route }) {
         }
       />
 
-      {/* ========================================== */}
-      {/* MODAL DE CRIAÇÃO DE SALA */}
-      {/* ========================================== */}
+      {/* Modal Criar Sala */}
       <Modal visible={modalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setModalVisible(false)} />
@@ -357,9 +311,7 @@ export default function VoiceRoomScreen({ navigation, route }) {
         </View>
       </Modal>
 
-      {/* ========================================== */}
-      {/* MODAL PARA ENTRAR POR ID */}
-      {/* ========================================== */}
+      {/* Modal Entrar por ID */}
       <Modal visible={joinModalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setJoinModalVisible(false)} />
@@ -464,5 +416,5 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#ff6b6b', fontSize: 15, fontWeight: 'bold' },
   modalSave: { flex: 1, borderRadius: 14, overflow: 'hidden' },
   modalSaveGradient: { paddingVertical: 14, alignItems: 'center' },
-  modalSaveText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  modalSaveText: { color: '#fff', fontSize: 15, fontWeight: 'bold' }
 });
