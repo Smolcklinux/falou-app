@@ -43,6 +43,8 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   }, []);
 
   const loadData = async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const profile = await getUserProfile(auth.currentUser.uid);
     const profile = await getUserProfile(auth.currentUser.uid);
     if (profile.success) setUserProfile(profile.data);
     await checkPermissionsAndConnect();

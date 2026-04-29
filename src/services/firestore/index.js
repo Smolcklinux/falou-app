@@ -2,148 +2,59 @@
  * ============================================
  * FALOU - FIRESTORE SERVICE (ÍNDICE)
  * ============================================
- * Exporta todas as funções dos sub-módulos
- * ============================================
  */
 
-// ✅ Importar de user.js
+import { db } from '../../../config/firebase';
 import { 
-  createUserProfile,
-  completeUserProfile,
-  getUserProfile,
-  searchUsers,
-  updateUserProfile,
-  updateUserStats
-} from './user';
+  doc, setDoc, getDoc, updateDoc, collection, 
+  addDoc, query, where, getDocs, orderBy, limit,
+  arrayUnion, arrayRemove, serverTimestamp, deleteDoc,
+  onSnapshot, increment
+} from 'firebase/firestore';
 
-// ✅ Importar de friends.js
-import {
-  sendFriendRequest,
-  getFriendRequests,
-  acceptFriendRequest,
-  getFriends,
-  getFollowers,
-  getFollowing,
-  followUser,
-  unfollowUser,
-  checkIsFollowing
-} from './friends';
-
-// ✅ Importar de messages.js
-import {
-  sendMessage,
-  getMessages,
-  listenToMessages,
-  markMessagesAsRead,
-  getChats
-} from './messages';
-
-// ✅ Importar de rooms.js
-import {
-  createVoiceRoom,
-  getUserVoiceRoom,
-  getRoomByNumericId,
-  getActiveRooms,
-  getPopularRooms,
-  getNewRooms,
-  getRecentRooms,
-  getFollowedRooms,
-  searchRooms,
-  updateUserVoiceRoom,
-  deleteUserVoiceRoom,
-  updateRoomPopularity,
-  getRoomSeats,
-  updateRoomSeats,
-  sendRoomMessage,
-  getRoomMessages,
-  listenToRoomMessages
-} from './rooms';
-
-// ✅ Importar de moments.js
-import {
-  getMoments,
-  createMoment,
-  likeMoment,
-  listenToMoments,
-  getFollowingMoments,
-  getPopularMoments
-} from './moments';
-
-// ✅ Importar de visitors.js
-import {
-  addVisitor,
-  getVisitors
-} from './visitors';
-
-// ============================================
-// ✅ EXPORTAÇÕES
-// ============================================
-
-// User
-export {
-  createUserProfile,
-  completeUserProfile,
-  getUserProfile,
-  searchUsers,
-  updateUserProfile,
-  updateUserStats
+// ✅ Exporta o db e funções do Firestore
+export { 
+  db, doc, setDoc, getDoc, updateDoc, collection, 
+  addDoc, query, where, getDocs, orderBy, limit,
+  arrayUnion, arrayRemove, serverTimestamp, deleteDoc,
+  onSnapshot, increment
 };
 
-// Friends
-export {
-  sendFriendRequest,
-  getFriendRequests,
-  acceptFriendRequest,
-  getFriends,
-  getFollowers,
-  getFollowing,
-  followUser,
-  unfollowUser,
-  checkIsFollowing
-};
+// Importa e re-exporta todas as funções dos serviços
+import * as user from './user';
+import * as friends from './friends';
+import * as messages from './messages';
+import * as rooms from './rooms';
+import * as moments from './moments';
+import * as visitors from './visitors';
 
-// Messages
-export {
-  sendMessage,
-  getMessages,
-  listenToMessages,
-  markMessagesAsRead,
-  getChats
-};
+// Re-exporta tudo
+export const {
+  createUserProfile, completeUserProfile, getUserProfile, searchUsers, updateUserProfile, updateUserStats
+} = user;
 
-// Rooms
-export {
-  createVoiceRoom,
-  getUserVoiceRoom,
-  getRoomByNumericId,
-  getActiveRooms,
-  getPopularRooms,
-  getNewRooms,
-  getRecentRooms,
-  getFollowedRooms,
-  searchRooms,
-  updateUserVoiceRoom,
-  deleteUserVoiceRoom,
-  updateRoomPopularity,
-  getRoomSeats,
-  updateRoomSeats,
-  sendRoomMessage,
-  getRoomMessages,
-  listenToRoomMessages
-};
+export const {
+  sendFriendRequest, getFriendRequests, acceptFriendRequest, getFriends, getFollowers, getFollowing,
+  followUser, unfollowUser, checkIsFollowing
+} = friends;
 
-// Moments
-export {
-  getMoments,
-  createMoment,
-  likeMoment,
-  listenToMoments,
-  getFollowingMoments,
-  getPopularMoments
-};
+export const {
+  sendMessage, getMessages, listenToMessages, markMessagesAsRead, getChats
+} = messages;
 
-// Visitors
-export {
-  addVisitor,
-  getVisitors
-};
+export const {
+  createVoiceRoom, getUserVoiceRoom, getRoomByNumericId, getActiveRooms, getPopularRooms, getNewRooms,
+  getRecentRooms, getFollowedRooms, searchRooms, updateUserVoiceRoom, deleteUserVoiceRoom, updateRoomPopularity,
+  getRoomSeats, updateRoomSeats, sendRoomMessage, getRoomMessages, listenToRoomMessages
+} = rooms;
+
+export const {
+  getMoments, createMoment, likeMoment, listenToMoments, getFollowingMoments, getPopularMoments
+} = moments;
+
+export const {
+  addVisitor, getVisitors
+} = visitors;
+
+// Exporta também os objetos inteiros
+export { user, friends, messages, rooms, moments, visitors };

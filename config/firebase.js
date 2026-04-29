@@ -3,7 +3,6 @@ import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/aut
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Suas credenciais do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDyNkk3BuofXAHyrPCYPm6XRpJp4_zsOrI",
   authDomain: "falou-app.firebaseapp.com",
@@ -16,17 +15,15 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializar Auth com persistência (importante para React Native)
+// Inicializar Auth com persistence
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-// Inicializar Firestore (banco de dados)
+// Inicializar Firestore
 const db = getFirestore(app);
 
-// ❌ NÃO estamos usando o Storage do Firebase
-// Todas as imagens (avatares, presentes, etc.) serão gerenciadas pelo Cloudinary
+// Verificar se db está definido
+console.log('🔥 Firebase inicializado:', !!db);
 
-// Exportar apenas o necessário
 export { auth, db };
-export default app;
