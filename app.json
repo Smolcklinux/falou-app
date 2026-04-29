@@ -44,6 +44,18 @@
       "bundler": "metro"
     },
     "plugins": [
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "compileSdkVersion": 34,
+          "targetSdkVersion": 34,
+          "buildToolsVersion": "34.0.0",
+          "kotlinVersion": "1.9.24",
+          "minSdkVersion": 23
+        }
+      }
+    ],
       [
         "expo-image-picker",
         {
@@ -58,7 +70,8 @@
         }
       ],
       "react-native-permissions",
-      "@livekit/react-native-expo-plugin"
+      "@livekit/react-native-expo-plugin",
+      "expo-build-properties"
     ],
     "assetBundlePatterns": [
       "**/*"
