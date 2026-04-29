@@ -3,8 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -15,8 +13,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 20  # Mudado de 18 para 20
-          cache: 'npm'
+          node-version: 20
           
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,18 +23,25 @@ jobs:
           
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 12266719
+          accept-android-sdk-licenses: true
+          
+      - name: Accept licenses manually
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps
         
       - name: Prebuild Android
         run: npx expo prebuild --platform android --clean
         
-      - name: Build Android APK
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --no-daemon
           
       - name: Upload APK
         uses: actions/upload-artifact@v4
