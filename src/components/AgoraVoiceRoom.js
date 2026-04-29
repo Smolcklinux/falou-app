@@ -1,3 +1,9 @@
+/**
+ * ============================================
+ * FALOU - COMPONENTE AGORA VOICE ROOM
+ * ============================================
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator,
@@ -43,8 +49,8 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   }, []);
 
   const loadData = async () => {
+    // Aguardar um pouco para garantir inicialização
     await new Promise(resolve => setTimeout(resolve, 500));
-    const profile = await getUserProfile(auth.currentUser.uid);
     const profile = await getUserProfile(auth.currentUser.uid);
     if (profile.success) setUserProfile(profile.data);
     await checkPermissionsAndConnect();
