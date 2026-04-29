@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { auth } from '../../config/firebase';
+import { auth, db } from '../../config/firebase';
 import { generateAgoraToken, AGORA_APP_ID } from '../services/agora';
 import { getUserProfile, sendRoomMessage, listenToRoomMessages, getRoomSeats } from '../services/firestore/index';
 import { requestMicrophonePermission } from '../services/permissions';
@@ -38,6 +38,13 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   const unsubscribeMessages = useRef(null);
 
   useEffect(() => {
+    // Verificar se Firebase está inicializado
+    if (!db) {
+      console.error('❌ Firestore não inicializado!');
+      Alert.alert('Erro', 'Firebase não inicializado. Tente reiniciar o app.');
+      return;
+    }
+    console.log('✅ Firestore OK');
     loadData();
     return () => {
       if (unsubscribeMessages.current) unsubscribeMessages.current();
@@ -49,11 +56,20 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   }, []);
 
   const loadData = async () => {
-    // Aguardar um pouco para garantir inicialização
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const profile = await getUserProfile(auth.currentUser.uid);
-    if (profile.success) setUserProfile(profile.data);
-    await checkPermissionsAndConnect();
+    // Aguardar Firebase inicializar
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+      const profile = await getUserProfile(auth.currentUser.uid);
+      if (profile.success) {
+        setUserProfile(profile.data);
+        console.log('✅ Perfil carregado:', profile.data.nick);
+      }
+      await checkPermissionsAndConnect();
+    } catch (error) {
+      console.error('Erro ao carregar perfil:', error);
+      Alert.alert('Erro', 'Falha ao carregar perfil. Tente novamente.');
+    }
   };
 
   const checkPermissionsAndConnect = async () => {
@@ -122,22 +138,34 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   };
 
   const loadMessages = async () => {
-    const result = await listenToRoomMessages(roomId, (newMessages) => {
-      setMessages(newMessages);
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-    });
-    unsubscribeMessages.current = result;
+    try {
+      const result = await listenToRoomMessages(roomId, (newMessages) => {
+        setMessages(newMessages);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+      });
+      unsubscribeMessages.current = result;
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+    }
   };
 
   const loadSeats = async () => {
-    const result = await getRoomSeats(roomId);
-    if (result.success) setSeats(result.seats);
+    try {
+      const result = await getRoomSeats(roomId);
+      if (result.success) setSeats(result.seats);
+    } catch (error) {
+      console.error('Erro ao carregar cadeiras:', error);
+    }
   };
 
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
-    await sendRoomMessage(roomId, auth.currentUser.uid, userProfile?.nick, userProfile?.avatarUrl, chatInput);
-    setChatInput('');
+    try {
+      await sendRoomMessage(roomId, auth.currentUser.uid, userProfile?.nick, userProfile?.avatarUrl, chatInput);
+      setChatInput('');
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+    }
   };
 
   const renderSeat = (seat, index) => {
@@ -228,7 +256,13 @@ export default function AgoraVoiceRoom({ navigation, route }) {
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           />
           <View style={styles.inputContainer}>
-            <TextInput style={styles.chatInput} placeholder="Digite uma mensagem..." placeholderTextColor={colors.textSecondary} value={chatInput} onChangeText={setChatInput} />
+            <TextInput 
+              style={styles.chatInput} 
+              placeholder="Digite uma mensagem..." 
+              placeholderTextColor={colors.textSecondary} 
+              value={chatInput} 
+              onChangeText={setChatInput} 
+            />
             <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
               <LinearGradient colors={[colors.primary, '#4ecdc4']} style={styles.sendButtonGradient}>
                 <Icon name="send" size={18} color="#fff" />

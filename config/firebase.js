@@ -23,7 +23,7 @@ const auth = initializeAuth(app, {
 // Inicializar Firestore
 const db = getFirestore(app);
 
-// Verificar se db está definido
-console.log('🔥 Firebase inicializado:', !!db);
+// Log para debug
+console.log('🔥 Firebase inicializado - db existe:', !!db);
 
 export { auth, db };

@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { auth } from './config/firebase';
+import { auth, db } from './config/firebase';
 import { getUserProfile } from './src/services/firestore/index';
 import { colors } from './src/utils/colors';
 
@@ -86,26 +86,36 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Splash');
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
+    // Aguardar Firebase inicializar
+    const checkFirebase = async () => {
+      let attempts = 0;
+      while (!db && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+      console.log('🔥 Firebase ready:', !!db);
+      setFirebaseReady(true);
+    };
+    
+    checkFirebase();
     
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (!isMounted) return;
-      
       if (firebaseUser) {
         console.log('📱 Usuário logado:', firebaseUser.uid);
         
         const profile = await getUserProfile(firebaseUser.uid);
         
-        if (profile.success && isMounted) {
+        if (profile.success) {
           await AsyncStorage.setItem('@falou_user', JSON.stringify({ 
             uid: firebaseUser.uid, 
             nick: profile.data.nick 
           }));
           setUser(firebaseUser);
           setInitialRoute(profile.data.profileCompleted ? 'Main' : 'CompleteProfile');
-        } else if (isMounted) {
+        } else {
           setUser(firebaseUser);
           setInitialRoute('Main');
         }
@@ -115,13 +125,13 @@ export default function App() {
         setInitialRoute('Splash');
       }
       
-      if (isMounted) setLoading(false);
+      setLoading(false);
     });
     
-    return () => { isMounted = false; unsubscribe(); };
+    return () => { unsubscribe(); };
   }, []);
 
-  if (loading) {
+  if (loading || !firebaseReady) {
     return <LoadingScreen />;
   }
 
@@ -142,7 +152,6 @@ export default function App() {
             <Stack.Screen name="Gifts" component={GiftsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
             <Stack.Screen name="VoiceRoom" component={VoiceRoomScreen} />
-            {/* ✅ AgoraVoiceRoom ATIVADO */}
             <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
