@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "294883976776",
+    "project_id": "falou-app",
+    "storage_bucket": "falou-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294883976776:android:d3c5ad29aa1b3f06831a7d",
+        "android_client_info": {
+          "package_name": "com.falou.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294883976776-49c7nfc1s5bodt3v7nv7inu7rhuouosa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.falou.app",
+            "certificate_hash": "f276f26ffa73921beaadda74fde2455d5b844e88"
+          }
+        },
+        {
+          "client_id": "294883976776-uqhb41upiffiuekedi69letlvr1cgpjl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoe0sHGpaX-68K-fQCxh_dZJ4UAGFo7b8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "294883976776-uqhb41upiffiuekedi69letlvr1cgpjl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
