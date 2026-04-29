@@ -1,8 +1,8 @@
 /**
  * ============================================
- * FALOU - APP PRINCIPAL
+ * FALOU - APP PRINCIPAL (LIVEKIT DESATIVADO)
  * ============================================
- * ✅ LiveKit ATIVADO
+ * ✅ Versão para teste - LiveKit desativado
  * ============================================
  */
 
@@ -42,8 +42,8 @@ import MeuScreen from './src/screens/MeuScreen';
 import GiftsScreen from './src/screens/GiftsScreen';
 import ShopScreen from './src/screens/ShopScreen';
 
-// ✅ LIVEKIT ATIVADO
-import LiveKitVoiceRoom from './src/components/LiveKitVoiceRoom';
+// ❌ LIVEKIT DESATIVADO PARA TESTE
+// import LiveKitVoiceRoom from './src/components/LiveKitVoiceRoom';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -144,8 +144,8 @@ export default function App() {
             <Stack.Screen name="Gifts" component={GiftsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
             <Stack.Screen name="VoiceRoom" component={VoiceRoomScreen} />
-            {/* ✅ LiveKitVoiceRoom ATIVADO */}
-            <Stack.Screen name="LiveKitVoiceRoom" component={LiveKitVoiceRoom} />
+            {/* ❌ LiveKitVoiceRoom desativado para teste */}
+            {/* <Stack.Screen name="LiveKitVoiceRoom" component={LiveKitVoiceRoom} /> */}
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="About" component={AboutScreen} />

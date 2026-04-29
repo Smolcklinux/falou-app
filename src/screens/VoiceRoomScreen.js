@@ -1,13 +1,8 @@
 /**
  * ============================================
- * FALOU - TELA DE SALAS DE VOZ
+ * FALOU - TELA DE SALAS DE VOZ (MODO TEXTO)
  * ============================================
- * ✅ VERSÃO CORRIGIDA:
- * 1. Removidos caracteres inválidos no final
- * 2. Lista todas as salas ativas
- * 3. ID da sala visível para compartilhamento
- * 4. Usuários podem entrar por ID numérico
- * 5. Navega para LiveKitVoiceRoom (áudio real)
+ * ✅ Versão sem LiveKit para teste
  * ============================================
  */
 
@@ -15,22 +10,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Alert, TextInput, Modal, ActivityIndicator, 
-  RefreshControl, Image, Animated
+  RefreshControl, Image, Animated, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';
 import { 
   getActiveRooms, createVoiceRoom, getUserProfile, 
-  getRoomByNumericId
+  getRoomByNumericId, sendRoomMessage, listenToRoomMessages
 } from '../services/firestore/index';
 import { colors } from '../utils/colors';
-import { testBackend } from '../services/livekit';
 
 export default function VoiceRoomScreen({ navigation, route }) {
   const { roomId, roomData: initialRoomData, roomNumericId: joinNumericId } = route.params || {};
   
   const [rooms, setRooms] = useState([]);
+  const [currentRoom, setCurrentRoom] = useState(initialRoomData || null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,28 +35,34 @@ export default function VoiceRoomScreen({ navigation, route }) {
   const [joinModalVisible, setJoinModalVisible] = useState(false);
   const [joinRoomId, setJoinRoomId] = useState('');
   
-  const [liveKitActive, setLiveKitActive] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const flatListRef = useRef();
+  const unsubscribeMessages = useRef(null);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     loadData();
-    checkLiveKitStatus();
     animateEntrance();
+    
+    return () => {
+      if (unsubscribeMessages.current) unsubscribeMessages.current();
+    };
   }, []);
+
+  useEffect(() => {
+    if (currentRoom) {
+      loadMessages();
+    }
+  }, [currentRoom]);
 
   const animateEntrance = () => {
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
     ]).start();
-  };
-
-  const checkLiveKitStatus = async () => {
-    const isActive = await testBackend();
-    setLiveKitActive(isActive);
-    console.log('🔊 LiveKit status:', isActive ? '✅ Ativo' : '⚠️ Modo demonstração');
   };
 
   const loadData = async () => {
@@ -78,6 +79,14 @@ export default function VoiceRoomScreen({ navigation, route }) {
     if (result.success) {
       setRooms(result.data);
     }
+  };
+
+  const loadMessages = async () => {
+    const result = await listenToRoomMessages(currentRoom.id, (newMessages) => {
+      setMessages(newMessages);
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    unsubscribeMessages.current = result;
   };
 
   const onRefresh = () => {
@@ -105,7 +114,7 @@ export default function VoiceRoomScreen({ navigation, route }) {
       setRoomName('');
       setRoomDescription('');
       await loadRooms();
-      Alert.alert('✅ Sucesso', `Sala criada!\n\n📌 ID: ${result.roomNumericId}\n\nCompartilhe este ID com seus amigos!`);
+      Alert.alert('✅ Sucesso', `Sala criada!\n\n📌 ID: ${result.roomNumericId}`);
     } else {
       Alert.alert('Erro', result.error);
     }
@@ -129,27 +138,42 @@ export default function VoiceRoomScreen({ navigation, route }) {
     
     const result = await getRoomByNumericId(numericId);
     if (result.success) {
-      navigation.navigate('LiveKitVoiceRoom', { 
-        roomId: result.data.id,
-        roomName: result.data.name,
-        roomNumericId: numericId
-      });
+      setCurrentRoom(result.data);
+      Alert.alert('✅ Conectado', `Você entrou na sala ${result.data.name}`);
     } else {
       Alert.alert('Erro', 'Sala não encontrada');
     }
     setLoading(false);
   };
 
+  const sendMessage = async () => {
+    if (!chatInput.trim() || !currentRoom) return;
+    
+    await sendRoomMessage(
+      currentRoom.id,
+      auth.currentUser.uid,
+      userProfile?.nick,
+      userProfile?.avatarUrl,
+      chatInput
+    );
+    setChatInput('');
+  };
+
   const enterRoom = (room) => {
-    navigation.navigate('LiveKitVoiceRoom', { 
-      roomId: room.id,
-      roomName: room.name,
-      roomNumericId: room.roomNumericId
-    });
+    setCurrentRoom(room);
+    Alert.alert('✅ Conectado', `Você entrou na sala ${room.name}`);
+  };
+
+  const leaveRoom = () => {
+    setCurrentRoom(null);
+    if (unsubscribeMessages.current) {
+      unsubscribeMessages.current();
+    }
+    setMessages([]);
   };
 
   const renderRoom = ({ item }) => {
-    const onlineCount = item.seats?.filter(s => s)?.length || 0;
+    const onlineCount = item.members?.length || 0;
     const displayId = item.roomNumericId || item.id?.slice(-6);
     
     return (
@@ -173,9 +197,7 @@ export default function VoiceRoomScreen({ navigation, route }) {
             </View>
             <View style={styles.roomInfo}>
               <Text style={styles.roomName}>{item.name}</Text>
-              {liveKitActive && (
-                <Text style={styles.roomNumericId}>Sala #{displayId}</Text>
-              )}
+              <Text style={styles.roomNumericId}>Sala #{displayId}</Text>
               <Text style={styles.roomOwner}>{item.ownerNick}</Text>
               <View style={styles.roomTags}>
                 <View style={styles.tag}>
@@ -194,6 +216,78 @@ export default function VoiceRoomScreen({ navigation, route }) {
       </Animated.View>
     );
   };
+
+  const renderMessage = ({ item }) => {
+    const isMyMessage = item.userId === auth.currentUser.uid;
+    
+    return (
+      <View style={[styles.messageBubble, isMyMessage ? styles.myMessage : styles.otherMessage]}>
+        {!isMyMessage && <Text style={styles.messageSender}>{item.userName}</Text>}
+        <Text style={styles.messageText}>{item.text}</Text>
+        <Text style={styles.messageTime}>
+          {item.timestamp?.toLocaleTimeString?.([], { hour: '2-digit', minute: '2-digit' }) || ''}
+        </Text>
+      </View>
+    );
+  };
+
+  if (currentRoom) {
+    return (
+      <LinearGradient colors={[colors.background, '#0f0f1a']} style={styles.container}>
+        {/* Header da Sala */}
+        <LinearGradient colors={[colors.card, 'transparent']} style={styles.roomHeaderGradient}>
+          <View style={styles.roomHeader}>
+            <TouchableOpacity onPress={leaveRoom} style={styles.backButton}>
+              <Icon name="arrow-left" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <View style={styles.roomHeaderInfo}>
+              <Text style={styles.roomHeaderTitle}>{currentRoom.name}</Text>
+              <Text style={styles.roomHeaderId}>ID: {currentRoom.roomNumericId}</Text>
+            </View>
+            <View style={styles.roomHeaderBadge}>
+              <Icon name="account-group" size={16} color={colors.primary} />
+              <Text style={styles.roomHeaderCount}>{currentRoom.members?.length || 0}</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Chat */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
+          contentContainerStyle={styles.chatList}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          ListEmptyComponent={
+            <View style={styles.emptyChat}>
+              <Icon name="chat-outline" size={50} color={colors.textSecondary} />
+              <Text style={styles.emptyChatText}>Nenhuma mensagem ainda</Text>
+              <Text style={styles.emptyChatSubtext}>Seja o primeiro a enviar uma mensagem!</Text>
+            </View>
+          }
+        />
+
+        {/* Input */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.chatInput}
+              placeholder="Digite uma mensagem..."
+              placeholderTextColor={colors.textSecondary}
+              value={chatInput}
+              onChangeText={setChatInput}
+            />
+            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+              <LinearGradient colors={[colors.primary, '#4ecdc4']} style={styles.sendButtonGradient}>
+                <Icon name="send" size={18} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    );
+  }
 
   if (loading) {
     return (
@@ -416,5 +510,32 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#ff6b6b', fontSize: 15, fontWeight: 'bold' },
   modalSave: { flex: 1, borderRadius: 14, overflow: 'hidden' },
   modalSaveGradient: { paddingVertical: 14, alignItems: 'center' },
-  modalSaveText: { color: '#fff', fontSize: 15, fontWeight: 'bold' }
+  modalSaveText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+
+  // Estilos da Sala (Chat)
+  roomHeaderGradient: { paddingTop: 40, paddingBottom: 15 },
+  roomHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 16 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(108,99,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  roomHeaderInfo: { flex: 1 },
+  roomHeaderTitle: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
+  roomHeaderId: { color: colors.primary, fontSize: 11, marginTop: 2 },
+  roomHeaderBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(108,99,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  roomHeaderCount: { color: colors.text, fontSize: 14, fontWeight: 'bold' },
+  
+  chatList: { paddingHorizontal: 16, paddingVertical: 16 },
+  messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 20, marginBottom: 12 },
+  myMessage: { backgroundColor: colors.primary, alignSelf: 'flex-end', borderBottomRightRadius: 4 },
+  otherMessage: { backgroundColor: colors.card, alignSelf: 'flex-start', borderBottomLeftRadius: 4 },
+  messageSender: { color: '#4ecdc4', fontSize: 11, marginBottom: 4, fontWeight: 'bold' },
+  messageText: { color: colors.text, fontSize: 14 },
+  messageTime: { color: 'rgba(255,255,255,0.5)', fontSize: 9, textAlign: 'right', marginTop: 6 },
+  
+  emptyChat: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },
+  emptyChatText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
+  emptyChatSubtext: { color: colors.textSecondary, fontSize: 13, textAlign: 'center' },
+  
+  inputContainer: { flexDirection: 'row', padding: 12, gap: 10, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },
+  chatInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 25, paddingHorizontal: 16, paddingVertical: 12, color: colors.text, fontSize: 15 },
+  sendButton: { borderRadius: 25, overflow: 'hidden' },
+  sendButtonGradient: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
 });
