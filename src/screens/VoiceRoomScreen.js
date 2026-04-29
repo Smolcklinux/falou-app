@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { auth } from '../../config/firebase';
+import { auth, db } from '../../config/firebase';
 import { 
   getActiveRooms, createVoiceRoom, getUserProfile, 
   getRoomByNumericId, sendRoomMessage, listenToRoomMessages
@@ -539,3 +539,48 @@ const styles = StyleSheet.create({
   sendButton: { borderRadius: 25, overflow: 'hidden' },
   sendButtonGradient: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
 });
+
+// Adicionar esta função antes do handleCreateRoom
+const waitForFirebase = async () => {
+  let attempts = 0;
+  while (!db && attempts < 10) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    attempts++;
+  }
+  return !!db;
+};
+
+// Modificar o handleCreateRoom
+const handleCreateRoom = async () => {
+  if (!roomName.trim()) {
+    Alert.alert('Erro', 'Digite um nome para a sala');
+    return;
+  }
+
+  // Aguardar Firebase inicializar
+  const firebaseReady = await waitForFirebase();
+  if (!firebaseReady) {
+    Alert.alert('Erro', 'Firebase não disponível. Tente novamente em alguns segundos.');
+    return;
+  }
+
+  setLoading(true);
+  const result = await createVoiceRoom({
+    name: roomName,
+    description: roomDescription,
+    ownerId: auth.currentUser.uid,
+    ownerNick: userProfile?.nick || 'Usuário',
+    ownerAvatar: userProfile?.avatarUrl || null,
+  });
+
+  if (result.success) {
+    setModalVisible(false);
+    setRoomName('');
+    setRoomDescription('');
+    await loadRooms();
+    Alert.alert('✅ Sucesso', `Sala criada!\n\n📌 ID: ${result.roomNumericId}`);
+  } else {
+    Alert.alert('Erro', result.error);
+  }
+  setLoading(false);
+};
