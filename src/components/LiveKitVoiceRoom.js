@@ -1,7 +1,7 @@
 /**
  * ============================================
  * FALOU - COMPONENTE LIVEKIT VOICE ROOM
- * Áudio ao vivo com LiveKit
+ * Áudio ao vivo com LiveKit - CORRIGIDO
  * ============================================
  */
 
@@ -9,28 +9,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Alert, ActivityIndicator, ScrollView, FlatList,
-  TextInput, KeyboardAvoidingView, Platform
+  TextInput, KeyboardAvoidingView, Platform, Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';
 import { generateLiveKitToken } from '../services/livekit';
-import { getUserProfile, addVisitor, sendRoomMessage, listenToRoomMessages, updateRoomSeats, getRoomSeats } from '../services/firestore/index';
+import { getUserProfile, sendRoomMessage, listenToRoomMessages, getRoomSeats } from '../services/firestore/index';
 import { requestMicrophonePermission } from '../services/permissions';
 import { colors } from '../utils/colors';
 
-// LiveKit (será importado quando instalado)
-let LiveKitRoom, Room, useParticipant, useTrack, Track;
-try {
-  const LiveKit = require('livekit-react-native');
-  LiveKitRoom = LiveKit.LiveKitRoom;
-  Room = LiveKit.Room;
-  useParticipant = LiveKit.useParticipant;
-  useTrack = LiveKit.useTrack;
-  Track = LiveKit.Track;
-} catch (e) {
-  console.log('⚠️ LiveKit não instalado, modo simulação:', e.message);
-}
+// Importação correta do LiveKit
+import { LiveKitRoom } from '@livekit/react-native';
 
 const SEATS_COUNT = 10;
 
@@ -41,30 +31,23 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
   const [token, setToken] = useState(null);
   const [connecting, setConnecting] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
-  const [roomData, setRoomData] = useState(null);
   const [seats, setSeats] = useState(Array(SEATS_COUNT).fill(null));
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [showChat, setShowChat] = useState(true);
-  const [showParticipants, setShowParticipants] = useState(false);
   
   const flatListRef = useRef();
   const unsubscribeMessages = useRef(null);
-  const socketRef = useRef(null);
-  const localParticipantRef = useRef(null);
 
   useEffect(() => {
     loadData();
     return () => {
       if (unsubscribeMessages.current) unsubscribeMessages.current();
-      if (socketRef.current) socketRef.current.disconnect();
     };
   }, []);
 
   const loadData = async () => {
     const profile = await getUserProfile(auth.currentUser.uid);
     if (profile.success) setUserProfile(profile.data);
-    
     await checkPermissionsAndConnect();
   };
 
@@ -77,13 +60,11 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
       setConnecting(false);
       return;
     }
-    
     await connectToLiveKit();
   };
 
   const connectToLiveKit = async () => {
     setConnecting(true);
-    
     try {
       const result = await generateLiveKitToken(
         roomId,
@@ -104,7 +85,6 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
       console.log('⚠️ Erro LiveKit:', error.message);
       simulateMode();
     }
-    
     setConnecting(false);
   };
 
@@ -130,7 +110,6 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
 
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
-    
     await sendRoomMessage(
       roomId,
       auth.currentUser.uid,
@@ -179,12 +158,9 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.userId === auth.currentUser.uid;
-    
     return (
       <View style={[styles.messageBubble, isMyMessage ? styles.myMessage : styles.otherMessage]}>
-        {!isMyMessage && (
-          <Text style={styles.messageSender}>{item.userName}</Text>
-        )}
+        {!isMyMessage && <Text style={styles.messageSender}>{item.userName}</Text>}
         <Text style={styles.messageText}>{item.text}</Text>
         <Text style={styles.messageTime}>
           {item.timestamp?.toLocaleTimeString?.([], { hour: '2-digit', minute: '2-digit' }) || ''}
@@ -193,7 +169,7 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
     );
   };
 
-  const ConnectedContent = () => (
+  const RoomContent = () => (
     <View style={styles.roomContainer}>
       <LinearGradient colors={[colors.card, 'transparent']} style={styles.roomHeader}>
         <View style={styles.roomHeaderContent}>
@@ -202,13 +178,8 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
           </TouchableOpacity>
           <View style={styles.roomHeaderInfo}>
             <Text style={styles.roomTitle}>{roomName}</Text>
-            {roomNumericId && (
-              <Text style={styles.roomId}>ID: {roomNumericId}</Text>
-            )}
+            {roomNumericId && <Text style={styles.roomId}>ID: {roomNumericId}</Text>}
           </View>
-          <TouchableOpacity onPress={() => setShowParticipants(!showParticipants)}>
-            <Icon name="account-group" size={24} color={colors.primary} />
-          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -289,10 +260,10 @@ export default function LiveKitVoiceRoom({ navigation, route }) {
             setLiveKitActive(false);
           }}
         >
-          <ConnectedContent />
+          <RoomContent />
         </LiveKitRoom>
       ) : (
-        <ConnectedContent />
+        <RoomContent />
       )}
     </LinearGradient>
   );
