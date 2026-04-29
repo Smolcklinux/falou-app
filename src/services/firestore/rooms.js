@@ -1,6 +1,6 @@
 /**
  * ============================================
- * FALOU - FIRESTORE ROOMS SERVICE
+ * FALOU - FIRESTORE ROOMS SERVICE (CORRIGIDO)
  * ============================================
  */
 
@@ -9,12 +9,13 @@ import { db, collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, 
 let currentRoomNumericId = null;
 
 const getMaxRoomNumericId = async () => {
+  // ✅ VERIFICAÇÃO CRÍTICA
+  if (!db) {
+    console.error('❌ db não inicializado em getMaxRoomNumericId');
+    return 100000;
+  }
+  
   try {
-    // Verificar se db existe
-    if (!db) {
-      console.error('❌ db não inicializado em getMaxRoomNumericId');
-      return 100000;
-    }
     const roomsRef = collection(db, 'rooms');
     const snapshot = await getDocs(roomsRef);
     let maxId = 100000;
@@ -38,16 +39,14 @@ const generateRoomNumericId = async () => {
 };
 
 export const createVoiceRoom = async (roomData) => {
+  // ✅ VERIFICAÇÃO CRÍTICA
+  if (!db) {
+    console.error('❌ db não inicializado em createVoiceRoom');
+    return { success: false, error: 'Firebase não inicializado. Reinicie o app.' };
+  }
+  
   try {
-    // VERIFICAÇÃO CRÍTICA
-    if (!db) {
-      console.error('❌ FATAL: db não está inicializado!');
-      return { success: false, error: 'Firebase não inicializado. Reinicie o app.' };
-    }
-    
     console.log('✅ db OK, criando sala...');
-    console.log('📌 roomData:', roomData);
-    
     const roomNumericId = await generateRoomNumericId();
     const roomsRef = collection(db, 'rooms');
     
@@ -75,10 +74,10 @@ export const createVoiceRoom = async (roomData) => {
   }
 };
 
-// Resto das funções permanecem iguais...
+// Todas as outras funções também precisam de verificação
 export const getUserVoiceRoom = async (userId) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const q = query(collection(db, 'rooms'), where('ownerId', '==', userId), where('isActive', '==', true));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) return { success: true, data: { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } };
@@ -87,8 +86,8 @@ export const getUserVoiceRoom = async (userId) => {
 };
 
 export const getRoomByNumericId = async (numericId) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const q = query(collection(db, 'rooms'), where('roomNumericId', '==', numericId), where('isActive', '==', true));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) return { success: true, data: { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } };
@@ -97,22 +96,21 @@ export const getRoomByNumericId = async (numericId) => {
 };
 
 export const getActiveRooms = async () => {
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const q = query(collection(db, 'rooms'), where('isActive', '==', true), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     const rooms = [];
     snapshot.forEach(doc => rooms.push({ id: doc.id, ...doc.data() }));
     return { success: true, data: rooms };
   } catch (error) {
-    console.error('Erro getActiveRooms:', error);
     return { success: true, data: [] };
   }
 };
 
 export const getPopularRooms = async (limitCount = 30) => {
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const q = query(collection(db, 'rooms'), where('isActive', '==', true), orderBy('popularity', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
     const rooms = [];
@@ -122,8 +120,8 @@ export const getPopularRooms = async (limitCount = 30) => {
 };
 
 export const getNewRooms = async () => {
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const q = query(collection(db, 'rooms'), where('isActive', '==', true), where('createdAt', '>=', sevenDaysAgo.toISOString()), orderBy('createdAt', 'desc'));
@@ -135,8 +133,8 @@ export const getNewRooms = async () => {
 };
 
 export const getRecentRooms = async (limitCount = 10) => {
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const q = query(collection(db, 'rooms'), where('isActive', '==', true), orderBy('createdAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
     const rooms = [];
@@ -147,8 +145,8 @@ export const getRecentRooms = async (limitCount = 10) => {
 
 export const getFollowedRooms = async (followingList) => {
   if (!followingList || followingList.length === 0) return { success: true, data: [] };
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const rooms = [];
     for (const uid of followingList) {
       const q = query(collection(db, 'rooms'), where('ownerId', '==', uid), where('isActive', '==', true));
@@ -160,8 +158,8 @@ export const getFollowedRooms = async (followingList) => {
 };
 
 export const searchRooms = async (searchTerm) => {
+  if (!db) return { success: true, data: [] };
   try {
-    if (!db) return { success: true, data: [] };
     const term = searchTerm.toLowerCase().trim();
     const q = query(collection(db, 'rooms'), where('isActive', '==', true), where('name', '>=', term), where('name', '<=', term + '\uf8ff'), limit(20));
     const snapshot = await getDocs(q);
@@ -172,8 +170,8 @@ export const searchRooms = async (searchTerm) => {
 };
 
 export const updateUserVoiceRoom = async (roomId, data) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const roomRef = doc(db, 'rooms', roomId);
     await updateDoc(roomRef, { name: data.name, description: data.description, coverImage: data.coverImage, settings: data.settings });
     return { success: true };
@@ -181,16 +179,16 @@ export const updateUserVoiceRoom = async (roomId, data) => {
 };
 
 export const deleteUserVoiceRoom = async (roomId) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     await deleteDoc(doc(db, 'rooms', roomId));
     return { success: true };
   } catch (error) { return { success: false, error: error.message }; }
 };
 
 export const updateRoomPopularity = async (roomId, incrementValue = 1) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const roomRef = doc(db, 'rooms', roomId);
     await updateDoc(roomRef, { popularity: increment(incrementValue) });
     return { success: true };
@@ -198,8 +196,8 @@ export const updateRoomPopularity = async (roomId, incrementValue = 1) => {
 };
 
 export const getRoomSeats = async (roomId) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const roomRef = doc(db, 'rooms', roomId);
     const roomSnap = await getDoc(roomRef);
     if (roomSnap.exists()) return { success: true, seats: roomSnap.data()?.seats || Array(10).fill(null) };
@@ -208,8 +206,8 @@ export const getRoomSeats = async (roomId) => {
 };
 
 export const updateRoomSeats = async (roomId, seats) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const roomRef = doc(db, 'rooms', roomId);
     await updateDoc(roomRef, { seats });
     return { success: true };
@@ -217,8 +215,8 @@ export const updateRoomSeats = async (roomId, seats) => {
 };
 
 export const sendRoomMessage = async (roomId, userId, userName, userAvatar, text) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const messagesRef = collection(db, 'rooms', roomId, 'messages');
     await addDoc(messagesRef, { userId, userName, userAvatar: userAvatar || null, text, timestamp: serverTimestamp(), type: 'user' });
     return { success: true };
@@ -226,8 +224,8 @@ export const sendRoomMessage = async (roomId, userId, userName, userAvatar, text
 };
 
 export const getRoomMessages = async (roomId, limitCount = 100) => {
+  if (!db) return { success: false, error: 'Firebase não inicializado' };
   try {
-    if (!db) return { success: false, error: 'Firebase não inicializado' };
     const q = query(collection(db, 'rooms', roomId, 'messages'), orderBy('timestamp', 'asc'), limit(limitCount));
     const snapshot = await getDocs(q);
     const messages = [];
