@@ -1,8 +1,6 @@
 /**
  * ============================================
- * FALOU - APP PRINCIPAL (LIVEKIT DESATIVADO)
- * ============================================
- * ✅ Versão para teste - LiveKit desativado
+ * FALOU - APP PRINCIPAL (COM AGORA.IO)
  * ============================================
  */
 
@@ -42,8 +40,8 @@ import MeuScreen from './src/screens/MeuScreen';
 import GiftsScreen from './src/screens/GiftsScreen';
 import ShopScreen from './src/screens/ShopScreen';
 
-// ❌ LIVEKIT DESATIVADO PARA TESTE
-// import LiveKitVoiceRoom from './src/components/LiveKitVoiceRoom';
+// ✅ AGORA ATIVADO
+import AgoraVoiceRoom from './src/components/AgoraVoiceRoom';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -144,8 +142,8 @@ export default function App() {
             <Stack.Screen name="Gifts" component={GiftsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
             <Stack.Screen name="VoiceRoom" component={VoiceRoomScreen} />
-            {/* ❌ LiveKitVoiceRoom desativado para teste */}
-            {/* <Stack.Screen name="LiveKitVoiceRoom" component={LiveKitVoiceRoom} /> */}
+            {/* ✅ AgoraVoiceRoom ATIVADO */}
+            <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="About" component={AboutScreen} />
