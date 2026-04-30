@@ -70,7 +70,6 @@
         }
       ],
       "react-native-permissions",
-      "@livekit/react-native-expo-plugin",
       "expo-build-properties"
     ],
     "assetBundlePatterns": [
