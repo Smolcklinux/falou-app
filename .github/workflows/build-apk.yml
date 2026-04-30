@@ -3,8 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
   workflow_dispatch:
 
 jobs:
@@ -28,7 +26,9 @@ jobs:
           java-version: '17'
 
       - name: 📦 Instalar dependências
-        run: npm ci --legacy-peer-deps
+        run: |
+          npm install --legacy-peer-deps
+          ls -la node_modules/@react-native-community/cli-platform-android/ || echo "Pasta não encontrada"
 
       - name: 🔧 Configurar Android SDK
         uses: android-actions/setup-android@v3
@@ -37,32 +37,20 @@ jobs:
           accept-android-sdk-licenses: true
 
       - name: 🔑 Criar local.properties
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          cat android/local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
-      - name: 🏗️ Dar permissão ao Gradle
+      - name: 🔨 Dar permissão ao Gradle
         run: chmod +x android/gradlew
 
-      - name: 🧹 Limpar build anterior
-        run: cd android && ./gradlew clean && cd ..
-
-      - name: 🔨 Build APK de Debug
-        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: 🔨 Build APK de Release (se keystore configurado)
-        run: cd android && ./gradlew assembleRelease --no-daemon --stacktrace || echo "Release build ignorado (keystore não configurado)"
+      - name: 🏗️ Build APK Debug
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          cd ..
 
       - name: 📤 Upload APK Debug
         uses: actions/upload-artifact@v4
         with:
           name: falou-app-debug
           path: android/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
-
-      - name: 📤 Upload APK Release (se existir)
-        uses: actions/upload-artifact@v4
-        with:
-          name: falou-app-release
-          path: android/app/build/outputs/apk/release/*.apk
           retention-days: 30
