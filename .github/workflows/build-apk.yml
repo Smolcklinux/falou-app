@@ -12,34 +12,29 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-          
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 12266719
           accept-android-sdk-licenses: true
-          
+
       - name: Configurar ANDROID_HOME
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-          
-      - name: Criar local.properties
-        run: |
-          mkdir -p android
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          
+
       - name: Cache Gradle
         uses: actions/cache@v3
         with:
@@ -47,49 +42,70 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-            
+          restore-keys: ${{ runner.os }}-gradle-
+
       - name: Cache npm
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-          
-      - name: Aceitar licenças do Android
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          
+          restore-keys: ${{ runner.os }}-node-
+
       - name: Instalar dependências
         run: npm install --legacy-peer-deps
-        
-      - name: Forçar Kotlin 1.9.24
+
+      - name: Sobrescrever configuração do Kotlin
         run: |
-          # Criar arquivo de configuração do Kotlin
+          # Forçar Kotlin 1.9.24 no build.gradle
+          cat > android/build.gradle << 'EOF'
+          buildscript {
+              ext {
+                  buildToolsVersion = "34.0.0"
+                  minSdkVersion = 24
+                  compileSdkVersion = 35
+                  targetSdkVersion = 35
+                  ndkVersion = "26.1.10909125"
+                  kotlinVersion = "1.9.24"
+              }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath("com.android.tools.build:gradle:8.6.0")
+                  classpath("com.facebook.react:react-native-gradle-plugin")
+                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
+              }
+          }
+
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+
+          # Configurar gradle.properties
           cat > android/gradle.properties << 'EOF'
           org.gradle.jvmargs=-Xmx4096m
-          org.gradle.parallel=true
           android.useAndroidX=true
           android.enableJetifier=true
           kotlin.version=1.9.24
           android.suppressKotlinVersionCompatibilityCheck=true
           EOF
-          
-          # Atualizar build.gradle para forçar Kotlin 1.9.24
-          sed -i 's/kotlinVersion = "1.9.25"/kotlinVersion = "1.9.24"/g' android/build.gradle
-          sed -i 's/classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")/classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")/g' android/build.gradle
-          
-      - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean
-        
-      - name: Build APK
+
+          # Criar local.properties
+          mkdir -p android
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
+      - name: Prebuild e Build
         run: |
+          npx expo prebuild --platform android --clean
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
-          
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
