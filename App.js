@@ -1,7 +1,5 @@
 /**
- * ============================================
  * FALOU - APP PRINCIPAL (COM AGORA.IO)
- * ============================================
  */
 
 import React, { useState, useEffect } from 'react';
@@ -38,8 +36,6 @@ import EventosScreen from './src/screens/EventosScreen';
 import MeuScreen from './src/screens/MeuScreen';
 import GiftsScreen from './src/screens/GiftsScreen';
 import ShopScreen from './src/screens/ShopScreen';
-
-// ✅ AGORA ATIVADO
 import AgoraVoiceRoom from './src/components/AgoraVoiceRoom';
 
 const Stack = createNativeStackNavigator();
@@ -88,7 +84,6 @@ export default function App() {
   const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    // Aguardar Firebase inicializar
     const checkFirebase = async () => {
       let attempts = 0;
       while (!db && attempts < 10) {
@@ -150,7 +145,6 @@ export default function App() {
             <Stack.Screen name="ProfileView" component={ProfileViewScreen} />
             <Stack.Screen name="Gifts" component={GiftsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
-            <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />

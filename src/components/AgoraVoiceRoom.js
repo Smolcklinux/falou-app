@@ -17,7 +17,7 @@ import { getUserProfile, sendRoomMessage, listenToRoomMessages, getRoomSeats } f
 import { requestMicrophonePermission } from '../services/permissions';
 import { colors } from '../utils/colors';
 
-import RtcEngine from 'react-native-agora';
+import { RtcEngine } from 'react-native-agora';
 
 const SEATS_COUNT = 10;
 

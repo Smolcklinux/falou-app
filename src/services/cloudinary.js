@@ -1,12 +1,20 @@
-import {pickImageFromGallery} from './imagePicker';
-import {uploadToCloudinary as uploadToCloudinaryAPI} from './upload';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { uploadToCloudinary as uploadToCloudinaryAPI } from './upload';
 
 export const pickAndUploadImage = async () => {
-  const result = await pickImageFromGallery();
-  if (!result.success) {
-    return result;
-  }
-  return await uploadToCloudinaryAPI(result.uri);
+  return new Promise((resolve) => {
+    launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.7,
+    }, async (response) => {
+      if (!response.didCancel && !response.errorCode && response.assets?.[0]) {
+        const result = await uploadToCloudinaryAPI(response.assets[0].uri);
+        resolve(result);
+      } else {
+        resolve({ success: false, error: 'Nenhuma imagem selecionada' });
+      }
+    });
+  });
 };
 
 export const uploadAvatar = pickAndUploadImage;
