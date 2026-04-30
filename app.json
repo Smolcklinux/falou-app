@@ -52,7 +52,7 @@
           "targetSdkVersion": 35,
           "buildToolsVersion": "34.0.0",
           "kotlinVersion": "1.9.24",
-          "minSdkVersion": 23
+          "minSdkVersion": 24
         }
       }
     ],
