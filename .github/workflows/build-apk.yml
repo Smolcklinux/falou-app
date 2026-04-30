@@ -16,7 +16,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: ☕ Setup Java
         uses: actions/setup-java@v4
@@ -41,7 +41,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
 
       - name: 💾 Cache npm
@@ -54,109 +54,17 @@ jobs:
       - name: 📦 Instalar dependências
         run: npm install --legacy-peer-deps
 
-      - name: ⚡ CORREÇÃO DEFINITIVA do Kotlin (substitui build.gradle do expo-modules-core)
+      - name: 🔧 Criar local.properties
         run: |
-          # Localizar o arquivo build.gradle do expo-modules-core
-          MODULE_CORE_PATH=$(find node_modules/expo-modules-core -name "build.gradle" | head -1)
-          echo "📁 Arquivo encontrado: $MODULE_CORE_PATH"
-
-          # Substituir o conteúdo para forçar Kotlin 1.9.24 e suprimir a verificação
-          cat > "$MODULE_CORE_PATH" << 'EOF'
-          buildscript {
-              ext.kotlin_version = '1.9.24'
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-              }
-          }
-
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-
-          apply plugin: 'com.android.library'
-          apply plugin: 'kotlin-android'
-
-          android {
-              compileSdkVersion 35
-              namespace "expo.modules.core"
-              defaultConfig {
-                  minSdkVersion 24
-                  targetSdkVersion 35
-                  versionCode 1
-                  versionName "1.0"
-              }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-              kotlinOptions {
-                  jvmTarget = JavaVersion.VERSION_17.toString()
-                  freeCompilerArgs += ["-Xskip-metadata-version-check"]
-              }
-          }
-
-          dependencies {
-              implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-              implementation 'androidx.annotation:annotation:1.7.0'
-          }
-          EOF
-
-          echo "✅ Arquivo build.gradle do expo-modules-core sobrescrito com sucesso!"
-
-      - name: 🔧 Configurar o build.gradle principal e gradle.properties
-        run: |
-          cat > android/build.gradle << 'EOF'
-          buildscript {
-              ext {
-                  buildToolsVersion = "34.0.0"
-                  minSdkVersion = 24
-                  compileSdkVersion = 35
-                  targetSdkVersion = 35
-                  ndkVersion = "26.1.10909125"
-                  kotlinVersion = "1.9.24"
-              }
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath("com.android.tools.build:gradle:8.6.0")
-                  classpath("com.facebook.react:react-native-gradle-plugin")
-                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
-              }
-          }
-
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          EOF
-
-          cat > android/gradle.properties << 'EOF'
-          org.gradle.jvmargs=-Xmx4096m
-          android.useAndroidX=true
-          android.enableJetifier=true
-          kotlin.version=1.9.24
-          android.suppressKotlinVersionCompatibilityCheck=true
-          EOF
-
           mkdir -p android
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          cat android/local.properties
 
-      - name: 🏗️ Prebuild e Build do APK
+      - name: 🏗️ Build do APK
         run: |
-          npx expo prebuild --platform android --clean
           cd android
           chmod +x gradlew
+          ./gradlew clean
           ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: 📤 Upload do APK

@@ -19,7 +19,7 @@ import {
   ActivityIndicator, Image, Keyboard, TouchableWithoutFeedback,
   Alert, Animated, Modal, ScrollView
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';

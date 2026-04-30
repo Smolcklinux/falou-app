@@ -28,7 +28,7 @@ import {
   Linking  // ✅ ADD: Para abrir configurações quando permissão negada
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import { auth } from '../../config/firebase';
 import { completeUserProfile } from '../services/firestore/index';
 import { pickAndUploadImage } from '../services/cloudinary';

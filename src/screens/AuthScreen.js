@@ -10,7 +10,7 @@ import {
   Alert, ActivityIndicator, Animated, Dimensions,
   KeyboardAvoidingView, Platform, ImageBackground, ScrollView
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { loginUser, registerUser } from '../services/auth';
 import { createUserProfile } from '../services/firestore/index';

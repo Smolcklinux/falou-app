@@ -20,7 +20,7 @@ import {
   Image, ActivityIndicator, Animated, Alert
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';
 import { getUserProfile, followUser, unfollowUser, checkIsFollowing } from '../services/firestore/index';

@@ -16,7 +16,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   FlatList, Alert, Animated, Dimensions
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../utils/colors';
 

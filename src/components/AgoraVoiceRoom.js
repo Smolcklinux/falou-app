@@ -9,7 +9,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator,
   ScrollView, FlatList, TextInput, KeyboardAvoidingView, Platform, Image
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth, db } from '../../config/firebase';
 import { generateAgoraToken, AGORA_APP_ID } from '../services/agora';
@@ -107,7 +107,6 @@ export default function AgoraVoiceRoom({ navigation, route }) {
       
       await rtcEngine.setChannelProfile(1);
       await rtcEngine.setClientRole(1);
-      await rtcEngine.enableAudio();
       
       const uid = parseInt(auth.currentUser.uid.slice(-6), 36) || Math.floor(Math.random() * 100000);
       const tokenResult = await generateAgoraToken(roomId, uid, 'publisher');
@@ -132,7 +131,6 @@ export default function AgoraVoiceRoom({ navigation, route }) {
   const toggleMute = async () => {
     if (engine) {
       const newMuted = !muted;
-      await engine.muteLocalAudioStream(newMuted);
       setMuted(newMuted);
     }
   };

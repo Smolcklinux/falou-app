@@ -17,7 +17,7 @@ import {
   TextInput, Modal, Dimensions, Animated,
   Alert
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getPopularRooms, getNewRooms, searchUsers, searchRooms } from '../services/firestore/index';
 import { colors } from '../utils/colors';

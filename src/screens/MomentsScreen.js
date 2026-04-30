@@ -18,7 +18,7 @@ import {
   TextInput, Alert, Modal, ActivityIndicator, Image,
   RefreshControl, Dimensions, Animated
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from '../../config/firebase';
 import { 
