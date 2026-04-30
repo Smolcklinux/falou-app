@@ -1,46 +1,70 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Node
 node_modules/
+npm-debug.log
+yarn-error.log
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+# React Native
+.DS_Store
+*.log
+*.lock
+*.pid
+*.seed
+*.pid.lock
 
-# Native
-.kotlin/
-*.orig.*
+# Android
+android/app/build/
+android/build/
+android/local.properties
+android/*.iml
+android/.gradle/
+android/.idea/
+*.hprof
+
+# iOS
+ios/build/
+ios/Pods/
+*.xcworkspace
+*.xcodeproj
+
+# Secrets
+*.keystore
 *.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+.env
+.env.local
+
+# Temp
+tmp/
+temp/
+*.tmp
+$RECYCLE.BIN/
 
 # Metro
-.metro-health-check*
+metro-error.log
+.haste-map-*
+.metro-*
+.hermes-*
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# VS Code
+.vscode/
+*.swp
+*.swo
 
-# macOS
-.DS_Store
-*.pem
+# IDE
+.idea/
+*.iml
 
-# local env files
-.env*.local
+# Build outputs
+*.apk
+*.aab
+*.zip
 
-# typescript
+# Coverage
+coverage/
+.nyc_output/
+
+# Expo (caso sobre)
+.expo/
+.expo-shared/
+
+# Debug
 *.tsbuildinfo
-
-app-example
-
-# generated native folders
-/ios
-/android
-
-# Local Netlify folder
-.netlify
