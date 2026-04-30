@@ -162,7 +162,7 @@ export default function ProfileScreen({ navigation }) {
   // ✅ Navegação para a Sala (card)
   const handleRoomPress = () => {
     if (userRoom) {
-      navigation.navigate('VoiceRoom', { roomId: userRoom.id, roomData: userRoom });
+      navigation.navigate('AgoraVoiceRoom', { roomId: userRoom.id, roomData: userRoom });
     } else {
       navigation.navigate('Meu');
     }

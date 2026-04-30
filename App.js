@@ -26,7 +26,6 @@ import CompleteProfileScreen from './src/screens/CompleteProfileScreen';
 import PopularScreen from './src/screens/PopularScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ProfileViewScreen from './src/screens/ProfileViewScreen';
-import VoiceRoomScreen from './src/screens/VoiceRoomScreen';
 import MomentsScreen from './src/screens/MomentsScreen';
 import FriendsScreen from './src/screens/FriendsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -151,7 +150,7 @@ export default function App() {
             <Stack.Screen name="ProfileView" component={ProfileViewScreen} />
             <Stack.Screen name="Gifts" component={GiftsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
-            <Stack.Screen name="VoiceRoom" component={VoiceRoomScreen} />
+            <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="AgoraVoiceRoom" component={AgoraVoiceRoom} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />

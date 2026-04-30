@@ -143,7 +143,7 @@ export default function PopularScreen({ navigation }) {
   };
 
   const enterRoom = (room) => {
-    navigation.navigate('VoiceRoom', { 
+    navigation.navigate('AgoraVoiceRoom', { 
       roomId: room.id, 
       roomData: room 
     });
