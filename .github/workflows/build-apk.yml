@@ -39,7 +39,6 @@ jobs:
         run: |
           mkdir -p android
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          cat android/local.properties
           
       - name: Cache Gradle
         uses: actions/cache@v3
@@ -66,6 +65,22 @@ jobs:
       - name: Instalar dependências
         run: npm install --legacy-peer-deps
         
+      - name: Forçar Kotlin 1.9.24
+        run: |
+          # Criar arquivo de configuração do Kotlin
+          cat > android/gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx4096m
+          org.gradle.parallel=true
+          android.useAndroidX=true
+          android.enableJetifier=true
+          kotlin.version=1.9.24
+          android.suppressKotlinVersionCompatibilityCheck=true
+          EOF
+          
+          # Atualizar build.gradle para forçar Kotlin 1.9.24
+          sed -i 's/kotlinVersion = "1.9.25"/kotlinVersion = "1.9.24"/g' android/build.gradle
+          sed -i 's/classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")/classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")/g' android/build.gradle
+          
       - name: Prebuild Android
         run: npx expo prebuild --platform android --clean
         
