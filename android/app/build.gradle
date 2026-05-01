@@ -7,10 +7,9 @@ react {
     reactNativeDir = file("../../node_modules/react-native")
     hermesCommand = "../../node_modules/react-native/sdks/hermesc/%OS-BIN%/hermesc"
     codegenDir = file("../../node_modules/@react-native/codegen")
-    bundleCommand = "bundle"
+    autolinkLibrariesWithApp = false
 }
 
-def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
@@ -42,7 +41,7 @@ android {
         }
         release {
             signingConfig signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
@@ -57,3 +56,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply from: file("../../node_modules/react-native-gradle-plugin/react-native-gradle-plugin.gradle")
