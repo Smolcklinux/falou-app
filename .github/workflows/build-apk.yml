@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 📥 Checkout
+      - name: 📥 Checkout do código
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Node.js
@@ -28,11 +28,6 @@ jobs:
       - name: 📦 Instalar dependências
         run: npm install --legacy-peer-deps
 
-      - name: 🔧 Criar diretório de autolinking
-        run: |
-          mkdir -p android/build/generated/autolinking
-          echo '{"root":"..","reactNativePath":"../node_modules/react-native","project":{"ios":{},"android":{"sourceDir":"./","appName":"app","packageName":"com.falou.app","dependencies":[]}},"dependencies":{},"healthChecks":[]}' > android/build/generated/autolinking/autolinking.json
-
       - name: 🔧 Configurar Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -48,7 +43,7 @@ jobs:
       - name: 🏗️ Build APK Debug
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon
           cd ..
 
       - name: 📤 Upload APK Debug
